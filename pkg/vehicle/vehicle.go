@@ -1,5 +1,7 @@
 package Vehicle
 
+import "fmt"
+
 type VehicleType int
 
 const (
@@ -30,69 +32,12 @@ func (status VehicleType) String() string {
 type Vehicle struct {
 	LicenseNumber string
 	Type          VehicleType
-	Ticket        *ParkingTicket
 }
 
-func NewVehicle(vt VehicleType) *Vehicle {
+func NewVehicle(vt VehicleType, licNumber string) *Vehicle {
+	fmt.Printf("Vehicle of type %s has come to our parking \n", vt.String())
 	return &Vehicle{
-		Type: vt,
+		Type:          vt,
+		LicenseNumber: licNumber,
 	}
-}
-
-func (v *Vehicle) AssignTicket(ticket *ParkingTicket) {
-	v.Ticket = ticket
-}
-
-type Car struct {
-	*Vehicle
-}
-
-func NewCar() *Car {
-	return &Car{
-		Vehicle: NewVehicle(CarType),
-	}
-}
-
-type Van struct {
-	*Vehicle
-}
-
-func NewVan() *Van {
-	return &Van{
-		Vehicle: NewVehicle(VanType),
-	}
-}
-
-type Truck struct {
-	*Vehicle
-}
-
-func NewTruck() *Truck {
-	return &Truck{
-		Vehicle: NewVehicle(TruckType),
-	}
-}
-
-type Motorcycle struct {
-	*Vehicle
-}
-
-func NewMotorcycle() *Motorcycle {
-	return &Motorcycle{
-		Vehicle: NewVehicle(MotorcycleType), // Assuming MotorcycleType is defined
-	}
-}
-
-type ElectricVehicle struct {
-	*Vehicle
-}
-
-func NewElectricVehicle() *ElectricVehicle {
-	return &ElectricVehicle{
-		Vehicle: NewVehicle(ElectricType), // Assuming ElectricType is defined
-	}
-}
-
-type ParkingTicket struct {
-	// Define ParkingTicket attributes here
 }

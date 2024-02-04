@@ -1,10 +1,11 @@
 package parkingticket
 
 import (
-	"crypto/rand"
 	"fmt"
 	Vehicle "parking-system-lld/pkg/vehicle"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 type ParkingTicketStatus int
@@ -21,7 +22,7 @@ type ParkingTicket struct {
 	PayedAt      time.Time
 	Status       ParkingTicketStatus
 	AmountPaid   float64
-	Vehicle      Vehicle.Vehicle
+	vehicle      *Vehicle.Vehicle
 }
 
 func (status ParkingTicketStatus) String() string {
@@ -48,12 +49,15 @@ func (t *ParkingTicket) MarkPaid() {
 
 func (t *ParkingTicket) PrintTicketInformation() {
 	fmt.Printf("Ticket ID: %s\nVehicle: %s\nEntry Time: %s\nExit Time: %s\nAmount Paid: %.2f\n",
-		t.TicketNumber, t.Vehicle.Type.String(), t.IssuedAt.String(), t.PayedAt.String(), t.AmountPaid)
+		t.TicketNumber, t.vehicle.Type.String(), t.IssuedAt.String(), t.PayedAt.String(), t.AmountPaid)
 }
 
-func GenerateTicket(*Vehicle.Vehicle) *ParkingTicket {
-	return &ParkingTicket{
-		TicketNumber: rand.Prime(),
-		
+func GenerateTicket(v *Vehicle.Vehicle) *ParkingTicket {
+	id := uuid.New()
+	pt := &ParkingTicket{
+		TicketNumber: fmt.Sprintf("%x", id[:]),
+		IssuedAt:     time.Now(),
+		vehicle:      v,
 	}
+	return pt
 }

@@ -2,7 +2,6 @@ package parkinglot
 
 import (
 	"fmt"
-	"parking-system-lld/pkg/account"
 	"parking-system-lld/pkg/parkingfloor"
 	"parking-system-lld/pkg/parkingticket"
 	Vehicle "parking-system-lld/pkg/vehicle"
@@ -38,9 +37,9 @@ type ParkingLot struct {
 	// MaxLargeCount      int
 	// MaxMotorbikeCount  int
 	// MaxElectricCount   int
-	EntrancePanels map[string]*EntrancePanel
-	ExitPanels     map[string]*ExitPanel
-	ParkingFloors  map[string]*parkingfloor.ParkingFloor
+	EntrancePanels []*EntrancePanel
+	ExitPanels     []*ExitPanel
+	ParkingFloors  []*parkingfloor.ParkingFloor
 	// ActiveTickets      map[string]*ParkingTicket
 }
 
@@ -137,11 +136,11 @@ func CreateInstance(l Location, name string) *ParkingLot {
 // }
 
 // addParkingFloor adds a parking floor to the parking lot
-func (pl *ParkingLot) AddParkingFloor(floor *parkingfloor.ParkingFloor) error {
+func (pl *ParkingLot) AddParkingFloor(name string, capacity int) error {
 	// pl.mu.Lock()
 	// defer pl.mu.Unlock()
-
-	pl.ParkingFloors[floor.Name] = floor
+	pf := parkingfloor.NewParkingFloor(name, capacity)
+	pl.ParkingFloors = append(pl.ParkingFloors, pf)
 	return nil
 }
 
@@ -155,7 +154,7 @@ func (pl *ParkingLot) AddEntrancePanel(id, name string) {
 	}
 	// Store in the database or perform any other required actions
 	// ...
-	pl.EntrancePanels[entrancePanel.ID] = &entrancePanel
+	pl.EntrancePanels = append(pl.EntrancePanels, &entrancePanel)
 }
 
 // addExitPanel adds an exit panel to the parking lot
@@ -167,16 +166,18 @@ func (pl *ParkingLot) AddExitPanel(id, name string) {
 		Name: name,
 	}
 
-	pl.ExitPanels[exitPanel.ID] = &exitPanel
+	pl.ExitPanels = append(pl.ExitPanels, &exitPanel)
 }
 
-func (xp *ExitPanel) ProcessPayment(ticket *parkingticket.ParkingTicket, payment *Payment) {
-	// Process payment for a parking ticket.
-}
+// func (xp *ExitPanel) ProcessPayment(ticket *parkingticket.ParkingTicket, payment *Payment) {
+// 	// Process payment for a parking ticket.
+// }
 
-func (ep *EntrancePanel) PrintTicket( vehicle *Vehicle.Vehicle) *parkingticket.ParkingTicket {
-	ticket := generateTicket(vehicle)
-	return nil
+func (ep *EntrancePanel) PrintTicket(vehicle *Vehicle.Vehicle) *parkingticket.ParkingTicket {
+	ticket := parkingticket.GenerateTicket(vehicle)
+	fmt.Println("Ticket Generated ")
+	ticket.PrintTicketInformation()
+	return ticket
 }
 
 func DisplayParkingLotInfo(prklot *ParkingLot) {
@@ -185,9 +186,5 @@ func DisplayParkingLotInfo(prklot *ParkingLot) {
 	fmt.Println(" No of Entrance Panels ", len(prklot.EntrancePanels))
 	fmt.Println(" No of Exit Panels ", len(prklot.ExitPanels))
 	fmt.Println(" No of Parking Floors ", len(prklot.ParkingFloors))
-}
-
-
-func generateTicket(v *Vehicle.Vehicle) *parkingticket.ParkingTicket{
-	parkingticket.ParkingTicket.
+	fmt.Println(" Address : ", prklot.Address)
 }
