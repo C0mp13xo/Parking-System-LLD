@@ -3,12 +3,29 @@ package Vehicle
 type VehicleType int
 
 const (
-	CarType VehicleType = iota
-	VanType
-	TruckType
-	MotorcycleType
-	ElectricType
+	CAR VehicleType = iota
+	VAN
+	TRUCK
+	MOTORCYCLE
+	ELECTRIC
 )
+
+func (status VehicleType) String() string {
+	switch status {
+	case CAR:
+		return "Car"
+	case VAN:
+		return "Van"
+	case TRUCK:
+		return "Truck"
+	case MOTORCYCLE:
+		return "Motorcycle"
+	case ELECTRIC:
+		return "Electric"
+	default:
+		return "Unknown"
+	}
+}
 
 type Vehicle struct {
 	LicenseNumber string

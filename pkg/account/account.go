@@ -1,20 +1,43 @@
 package account
 
+import (
+	"fmt"
+	"parking-system-lld/pkg/parkingfloor"
+	ParkingLot "parking-system-lld/pkg/parkinglot"
+	Parkingspot "parking-system-lld/pkg/parkingspot"
+)
+
+type AccountStatus int
+
+const (
+	ACTIVE AccountStatus = iota
+	CANCELLED
+	CLOSED
+	BLACKLISTED
+	NONE
+)
+
+type AccountType int
+
+const (
+	ADMIN AccountType = iota
+	ATTENDANT
+	CUSTOMER
+)
+
+type Person struct {
+	Name    string
+	Address string
+	Email   string
+	Phone   string
+}
+
 type Account struct {
 	UserName string
 	Password string
 	Status   AccountStatus
 	Person   Person
-}
-
-type AccountStatus int
-
-const (
-// Define status constants here
-)
-
-type Person struct {
-	// Define Person attributes here
+	AccountType
 }
 
 func (a *Account) ResetPassword() bool {
@@ -26,65 +49,60 @@ type Admin struct {
 	Account
 }
 
-func (admin *Admin) AddParkingFloor(floor ParkingFloor) bool {
+func AddAdmin(person Person, username, password string) *Admin {
+	return &Admin{
+		Account: Account{
+			Person:      person,
+			UserName:    username,
+			Password:    password,
+			AccountType: ADMIN,
+		},
+	}
+}
+
+func (admin *Admin) AddParkingFloor(parkinglot *ParkingLot.ParkingLot, pfName string, cap int) (string, error) {
 	// Implement logic to add parking floor
-	return true
+	if len(pfName) == 0 {
+		return "", fmt.Errorf("error : parking floor name provided is empty")
+	}
+	pf := parkingfloor.NewParkingFloor(pfName, cap)
+	err := parkinglot.AddParkingFloor(pf)
+	if err != nil {
+		return "", err
+	}
+	return pfName, nil
 }
 
-func (admin *Admin) AddParkingSpot(floorName string, spot ParkingSpot) bool {
+func (admin *Admin) AddParkingSpot(parkinglot *ParkingLot.ParkingLot, pfName string, spottype Parkingspot.ParkingSpotType) bool {
 	// Implement logic to add parking spot
+	parkinglot.ParkingFloors[pfName].AddParkingSpot(spottype)
 	return true
 }
 
-func (admin *Admin) AddParkingDisplayBoard(floorName string, displayBoard ParkingDisplayBoard) bool {
-	// Implement logic to add parking display board
-	return true
+func (admin *Admin) AddEntrancePanel(parkinglot *ParkingLot.ParkingLot, id, name string) {
+	parkinglot.AddEntrancePanel(id, name)
 }
 
-func (admin *Admin) AddCustomerInfoPanel(floorName string, infoPanel CustomerInfoPanel) bool {
-	// Implement logic to add customer info panel
-	return true
-}
-
-func (admin *Admin) AddEntrancePanel(entrancePanel EntrancePanel) bool {
-	// Implement logic to add entrance panel
-	return true
-}
-
-func (admin *Admin) AddExitPanel(exitPanel ExitPanel) bool {
-	// Implement logic to add exit panel
-	return true
+func (admin *Admin) AddExitPanel(parkinglot *ParkingLot.ParkingLot, id, name string) {
+	parkinglot.AddExitPanel(id, name)
 }
 
 type ParkingAttendant struct {
 	Account
 }
 
+func (admin *Admin) AddParkingAttendant(person Person, username, password string) *ParkingAttendant {
+	return &ParkingAttendant{
+		Account: Account{
+			Person:      person,
+			UserName:    username,
+			Password:    password,
+			AccountType: ATTENDANT,
+		},
+	}
+}
+
 func (attendant *ParkingAttendant) ProcessTicket(ticketNumber string) bool {
 	// Implement logic to process ticket
 	return true
-}
-
-type ParkingFloor struct {
-	// Define ParkingFloor attributes here
-}
-
-type ParkingSpot struct {
-	// Define ParkingSpot attributes here
-}
-
-type ParkingDisplayBoard struct {
-	// Define ParkingDisplayBoard attributes here
-}
-
-type CustomerInfoPanel struct {
-	// Define CustomerInfoPanel attributes here
-}
-
-type EntrancePanel struct {
-	// Define EntrancePanel attributes here
-}
-
-type ExitPanel struct {
-	// Define ExitPanel attributes here
 }

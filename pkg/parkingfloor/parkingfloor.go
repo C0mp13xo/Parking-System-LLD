@@ -2,105 +2,137 @@ package parkingfloor
 
 import (
 	"fmt"
+	Parkingspot "parking-system-lld/pkg/parkingspot"
+	"parking-system-lld/pkg/parkingticket"
+	Vehicle "parking-system-lld/pkg/vehicle"
+	"strconv"
 )
 
 type ParkingFloor struct {
-	Name             string
-	HandicappedSpots map[string]*HandicappedSpot
-	CompactSpots     map[string]*CompactSpot
-	LargeSpots       map[string]*LargeSpot
-	MotorbikeSpots   map[string]*MotorbikeSpot
-	ElectricSpots    map[string]*ElectricSpot
-	InfoPortals      map[string]*CustomerInfoPortal
-	DisplayBoard     *ParkingDisplayBoard
+	Name                string
+	Spots               []*Parkingspot.ParkingSpot
+	Capacity            int
+	CustomersInfoPortal []*parkingticket.ParkingTicket
 }
 
-func NewParkingFloor(name string) *ParkingFloor {
+func NewParkingFloor(name string, capacity int) *ParkingFloor {
 	return &ParkingFloor{
-		Name:             name,
-		HandicappedSpots: make(map[string]*HandicappedSpot),
-		CompactSpots:     make(map[string]*CompactSpot),
-		LargeSpots:       make(map[string]*LargeSpot),
-		MotorbikeSpots:   make(map[string]*MotorbikeSpot),
-		ElectricSpots:    make(map[string]*ElectricSpot),
-		InfoPortals:      make(map[string]*CustomerInfoPortal),
-		DisplayBoard:     NewParkingDisplayBoard(),
+		Name:                name,
+		Spots:               make([]*Parkingspot.ParkingSpot, 0),
+		Capacity:            capacity,
+		CustomersInfoPortal: make([]*parkingticket.ParkingTicket, 0),
 	}
 }
 
-func (pf *ParkingFloor) AddParkingSpot(spot ParkingSpot) {
-	switch spot.Type {
-	case Handicapped:
-		pf.HandicappedSpots[spot.Number] = spot.(*HandicappedSpot)
-	case Compact:
-		pf.CompactSpots[spot.Number] = spot.(*CompactSpot)
-	case Large:
-		pf.LargeSpots[spot.Number] = spot.(*LargeSpot)
-	case Motorbike:
-		pf.MotorbikeSpots[spot.Number] = spot.(*MotorbikeSpot)
-	case Electric:
-		pf.ElectricSpots[spot.Number] = spot.(*ElectricSpot)
+func (pf *ParkingFloor) AddParkingSpot(spot Parkingspot.ParkingSpotType) (bool, error) {
+	n := len(pf.Spots)
+	if n == pf.Capacity {
+		return false, fmt.Errorf("capacity of %s has reached", pf.Name)
+	}
+	spotNumber := strconv.Itoa(n + 1)
+	switch spot {
+	case Parkingspot.Handicapped:
+		pf.Spots = append(pf.Spots, Parkingspot.NewParkingSpotWithNumber(Parkingspot.Handicapped, spotNumber))
+	case Parkingspot.Compact:
+		pf.Spots = append(pf.Spots, Parkingspot.NewParkingSpotWithNumber(Parkingspot.Compact, spotNumber))
+	case Parkingspot.Large:
+		pf.Spots = append(pf.Spots, Parkingspot.NewParkingSpotWithNumber(Parkingspot.Large, spotNumber))
+	case Parkingspot.Motorbike:
+		pf.Spots = append(pf.Spots, Parkingspot.NewParkingSpotWithNumber(Parkingspot.Motorbike, spotNumber))
+	case Parkingspot.Electric:
+		pf.Spots = append(pf.Spots, Parkingspot.NewParkingSpotWithNumber(Parkingspot.Electric, spotNumber))
 	default:
 		fmt.Println("Wrong parking spot type!")
 	}
+	return true, nil
 }
 
-func (pf *ParkingFloor) AssignVehicleToSpot(vehicle *Vehicle, spot ParkingSpot) {
-	spot.AssignVehicle(vehicle)
-	switch spot.Type {
-	case Handicapped:
-		pf.UpdateDisplayBoardForHandicapped(spot)
-	case Compact:
-		pf.UpdateDisplayBoardForCompact(spot)
-	case Large:
-		pf.UpdateDisplayBoardForLarge(spot)
-	case Motorbike:
-		pf.UpdateDisplayBoardForMotorbike(spot)
-	case Electric:
-		pf.UpdateDisplayBoardForElectric(spot)
-	default:
-		fmt.Println("Wrong parking spot type!")
-	}
-}
-
-func (pf *ParkingFloor) UpdateDisplayBoardForHandicapped(spot ParkingSpot) {
-	if pf.DisplayBoard.HandicappedFreeSpot.Number == spot.Number {
-		// Find another free handicapped parking and assign it to the displayBoard
-		for key := range pf.HandicappedSpots {
-			if pf.HandicappedSpots[key].IsFree() {
-				pf.DisplayBoard.HandicappedFreeSpot = pf.HandicappedSpots[key]
-			}
+func (pf *ParkingFloor) FindParkingSpot(v Vehicle.Vehicle) (*Parkingspot.ParkingSpot, error) {
+	for _, s := range pf.Spots {
+		if s.Type == Parkingspot.ParkingSpotType(v.Type) && !s.Occupied {
+			return s, nil
 		}
-		pf.DisplayBoard.ShowEmptySpotNumber()
 	}
+	return nil, fmt.Errorf("spot not Found")
 }
 
-func (pf *ParkingFloor) UpdateDisplayBoardForCompact(spot ParkingSpot) {
-	if pf.DisplayBoard.CompactFreeSpot.Number == spot.Number {
-		// Find another free compact parking and assign it to the displayBoard
-		for key := range pf.CompactSpots {
-			if pf.CompactSpots[key].IsFree() {
-				pf.DisplayBoard.CompactFreeSpot = pf.CompactSpots[key]
-			}
+func (pf *ParkingFloor) AssignVehicleToSpot(vehicle *Vehicle.Vehicle, spot *Parkingspot.ParkingSpot) {
+	spot.AssignVehicleToSpot(vehicle)
+}
+
+func (pf *ParkingFloor) DisplayBoard() {
+	fmt.Println(" **************** welcome to floor ", pf.Name, " ****************")
+	var largespot *Parkingspot.ParkingSpot
+	var motorspot *Parkingspot.ParkingSpot
+	var electricspot *Parkingspot.ParkingSpot
+	var compactspot *Parkingspot.ParkingSpot
+	var handicappedspot *Parkingspot.ParkingSpot
+	for _, spot := range pf.Spots {
+		if spot.Type == Parkingspot.Large && spot.IsFree() {
+			largespot = spot
+			break
 		}
-		pf.DisplayBoard.ShowEmptySpotNumber()
+	}
+
+	for _, spot := range pf.Spots {
+		if spot.Type == Parkingspot.Compact && spot.IsFree() {
+			compactspot = spot
+			break
+		}
+	}
+
+	for _, spot := range pf.Spots {
+		if spot.Type == Parkingspot.Motorbike && spot.IsFree() {
+			motorspot = spot
+			break
+		}
+	}
+
+	for _, spot := range pf.Spots {
+		if spot.Type == Parkingspot.Handicapped && spot.IsFree() {
+			handicappedspot = spot
+			break
+		}
+	}
+
+	for _, spot := range pf.Spots {
+		if spot.Type == Parkingspot.Electric && spot.IsFree() {
+			electricspot = spot
+			break
+		}
+	}
+	if largespot != nil {
+		fmt.Println(" Large spot available at ", largespot.Number)
+	} else {
+		fmt.Println(" Large spot are full at this moment ")
+	}
+
+	if motorspot != nil {
+		fmt.Println(" Motor spot available at ", motorspot.Number)
+	} else {
+		fmt.Println(" Motor spot not available at this moment ")
+	}
+
+	if compactspot != nil {
+		fmt.Println(" Compact spot available at ", compactspot.Number)
+	} else {
+		fmt.Println(" Compact spot not available at this moment ")
+	}
+
+	if handicappedspot != nil {
+		fmt.Println(" Handicapped spot available at ", handicappedspot.Number)
+	} else {
+		fmt.Println(" Handicapped spot not available at this moment ")
+	}
+
+	if electricspot != nil {
+		fmt.Println(" Electric spot available at ", electricspot.Number)
+	} else {
+		fmt.Println(" Electric spot not available at this moment ")
 	}
 }
 
-func (pf *ParkingFloor) FreeSpot(spot ParkingSpot) {
-	spot.RemoveVehicle()
-	switch spot.Type {
-	case Handicapped:
-		// Increment freeHandicappedSpotCount or handle counts as needed
-	case Compact:
-		// Increment freeCompactSpotCount or handle counts as needed
-	case Large:
-		// Increment freeLargeSpotCount or handle counts as needed
-	case Motorbike:
-		// Increment freeMotorbikeSpotCount or handle counts as needed
-	case Electric:
-		// Increment freeElectricSpotCount or handle counts as needed
-	default:
-		fmt.Println("Wrong parking spot type!")
-	}
+//method to pay at customer info portal
+func (pf *ParkingFloor) PayAtCustomerInfoPortal(ticket *parkingticket.ParkingTicket) {
+
 }
