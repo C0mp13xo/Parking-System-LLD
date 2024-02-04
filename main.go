@@ -52,5 +52,5 @@ func main() {
 	}
 	att1 := admin1.AddParkingAttendant(attendantPerson, "attendant1", "attendant1@123")
 	attendants = append(attendants, att1)
-
+	//attendants are created globally but will later be moved to parking lot
 }
